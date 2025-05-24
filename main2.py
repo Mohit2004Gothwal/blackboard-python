@@ -38,8 +38,21 @@ class BlackboardApp:
         self.camera = cv2.VideoCapture(0)
         self.camera_canvas = tk.Canvas(window, width=self.camera_width, height=self.camera_height)
         self.camera_canvas.place(x=self.screen_width-self.camera_width-10, y=self.screen_height-self.camera_height-10)
+        self.camera_on = False
         
         self.update_camera()
+        self.camera_on = True  # Camera is on by default
+        self.window.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.window.bind("<Escape>", self.on_closing)
+        self.window.bind("<F11>", self.toggle_fullscreen)
+        self.window.bind("<F12>", self.toggle_camera)
+        self.window.bind("<Control-s>", self.save_canvas)
+        self.window.bind("<Control-c>", self.choose_color)
+        self.window.bind("<Control-e>", self.toggle_eraser)
+        self.window.bind("<Control-p>", self.toggle_pen)
+        self.window.bind("<Control-x>", self.toggle_pencil)
+        self.window.bind("<Control-r>", self.toggle_rectangle)
+        self.window.bind("<Control-o>", self.toggle_oval)
         
         self.window.mainloop()
     
@@ -49,7 +62,21 @@ class BlackboardApp:
             ("Pencil", lambda: self.set_tool("pencil")),
             ("Eraser", lambda: self.set_tool("eraser")),
             ("Color", self.choose_color),
-            ("Clear", self.clear_canvas)
+            ("Clear", self.clear_canvas),
+            ("Save", self.save_canvas),
+            ("Camera", self.toggle_camera),
+            ("Fullscreen", self.toggle_fullscreen),
+            ("Exit", self.on_closing),
+            ("Toggle Tools", self.toggle_tools),
+            ("Toggle Eraser", self.toggle_eraser),
+            ("Toggle Pen", self.toggle_pen),
+            ("Toggle Pencil", self.toggle_pencil),
+            ("Toggle Rectangle", self.toggle_rectangle),
+            ("Toggle Oval", self.toggle_oval),
+            ("Toggle Save", self.save_canvas),
+            ("Toggle Color", self.choose_color),
+
+
         ]
         for text, command in tools:
             tk.Button(self.tool_frame, text=text, command=command, width=10).pack(pady=5)
@@ -101,6 +128,7 @@ class BlackboardApp:
         self.canvas.delete("all")
     
     def update_camera(self):
+      if self.camera_on:
         ret, frame = self.camera.read()
         if ret:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -108,6 +136,37 @@ class BlackboardApp:
             photo = ImageTk.PhotoImage(image=Image.fromarray(frame))
             self.camera_canvas.create_image(0, 0, image=photo, anchor=tk.NW)
             self.camera_canvas.image = photo
-        self.window.after(10, self.update_camera)
+      else:
+        self.camera_canvas.delete("all")
+      self.window.after(10, self.update_camera)
+
+
+    def toggle_camera(self, event=None):
+     if self.camera_on:
+        self.camera.release()
+        self.camera_on = False
+        self.camera_canvas.delete("all")
+     else:
+        self.camera = cv2.VideoCapture(0)
+        self.camera_on = True
+
+    def toggle_fullscreen(self, event=None):
+        self.window.attributes("-fullscreen", not self.window.attributes("-fullscreen"))
+
+    def on_closing(self, event=None):
+        if self.camera_on:
+            self.camera.release()
+        self.window.destroy()
+
+    def toggle_tools(self, event=None):
+        if self.tool_frame.winfo_ismapped():
+            self.tool_frame.place_forget()
+        else:
+            self.tool_frame.place(x=10, y=10)
+    
+    def save_canvas(self, event=None):
+      self.canvas.postscript(file="drawing.eps")
+      print("Canvas saved as drawing.eps")
+
 
 BlackboardApp(tk.Tk(), "Blackboard with Camera")

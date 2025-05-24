@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Blackboard Mobile + Chatbot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        body {
+            background-color: #111;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 10px;
+        }
+
+        header {
+            text-align: center;
+            font-size: 2em;
+            margin-bottom: 15px;
+            color: #00ffc3;
+            font-weight: bold;
+        }
+
+        /* Chat container */
+        #chat-container {
+            background-color: #222;
+            border-radius: 10px;
+            padding: 10px;
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+
+        .chat-message {
+            margin: 5px 0;
+            padding: 8px 12px;
+            border-radius: 15px;
+            max-width: 80%;
+            clear: both;
+        }
+
+        .chat-message.user {
+            background-color: #00ffc3;
+            color: #000;
+            float: right;
+        }
+
+        .chat-message.bot {
+            background-color: #444;
+            float: left;
+        }
+
+        #chat-input-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        #chat-input {
+            flex-grow: 1;
+            padding: 8px;
+            border-radius: 20px;
+            border: none;
+            outline: none;
+            font-size: 1em;
+        }
+
+        #chat-send {
+            padding: 8px 16px;
+            background-color: #00ffc3;
+            border: none;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            color: black;
+        }
+
+        #chat-send:hover {
+            background-color: #ffcc00;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>Blackboard Mobile</header>
+
+    <section>
+        <h2>▶️ Run a Blackboard Version for Phone/Tablet</h2>
+        <div class="run-links">
+            <a href="/run1" class="btn btn-success mb-2">Run main.py</a>
+            <a href="/run2" class="btn btn-success mb-2">Run main2.py</a>
+            <a href="/run3" class="btn btn-success mb-2">Run main3.py</a>
+        </div>
+    </section>
+
+    <hr style="border-color: #333;" />
+
+    <section>
+        <h2>💬 Chatbot</h2>
+        <div id="chat-container"></div>
+
+        <div id="chat-input-container">
+            <input type="text" id="chat-input" placeholder="Type a message..." autocomplete="off" />
+            <button id="chat-send">Send</button>
+        </div>
+    </section>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js"
+        integrity="sha512-zpSZfDPYqf2UnCSFD4u+0C3ZPjFau6TwjX01xndS4tlAfHnpSQvw5zR4CpNlyYm/+qGb4thUqLoT82LrSl2uFg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script>
+        const socket = io();
+
+        const chatContainer = document.getElementById('chat-container');
+        const chatInput = document.getElementById('chat-input');
+        const chatSend = document.getElementById('chat-send');
+
+        function appendMessage(message, sender) {
+            const div = document.createElement('div');
+            div.classList.add('chat-message', sender);
+            div.textContent = message;
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Send user message to server
+        chatSend.onclick = () => {
+            const message = chatInput.value.trim();
+            if (message.length === 0) return;
+            appendMessage(message, 'user');
+            socket.emit('chat message', message);
+            chatInput.value = '';
+        };
+
+        // Also send message on Enter key
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                chatSend.click();
+                e.preventDefault();
+            }
+        });
+
+        // Listen for bot replies from server
+        socket.on('bot reply', function (msg) {
+            appendMessage(msg, 'bot');
+        });
+
+        // Optional: connection status logs
+        socket.on('connect', () => appendMessage('Connected to chatbot server.', 'bot'));
+        socket.on('disconnect', () => appendMessage('Disconnected from chatbot server.', 'bot'));
+
+        
+    </script>
+</body>
+
+</html>

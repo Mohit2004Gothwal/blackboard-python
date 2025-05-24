@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Blackboard - Web Drawing Board</title>
+
+    <!-- Bootstrap CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+        }
+
+        #canvas {
+            background-color: #111;
+            border: 2px solid #555;
+            border-radius: 8px;
+            touch-action: none;
+            /* prevent scrolling when drawing on mobile */
+        }
+
+        .toolbar {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container py-4">
+        <header class="mb-4 text-center">
+            <h1>🖌️ Blackboard</h1>
+            <p>A virtual drawing board in your browser — works on desktop & mobile!</p>
+        </header>
+
+        <div class="toolbar d-flex justify-content-center gap-2 flex-wrap">
+            <input type="color" id="colorPicker" value="#ffffff" title="Choose color" />
+            <button class="btn btn-light btn-sm" id="penBtn">Pen</button>
+            <button class="btn btn-light btn-sm" id="eraserBtn">Eraser</button>
+            <button class="btn btn-danger btn-sm" id="clearBtn">Clear</button>
+            <button class="btn btn-success btn-sm" id="saveBtn">Save PNG</button>
+            <button id="exitBtn" class="btn btn-warning btn-sm">Exit</button>
+        </div>
+
+        <canvas id="canvas" width="800" height="600" class="d-block mx-auto"></canvas>
+
+
+
+        <footer class="mt-5 text-center">
+            <small>© 2025 Blackboard by Mohit Kumar</small>
+        </footer>
+    </div>
+
+    <!-- Bootstrap JS (optional, for some components) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let drawing = false;
+        let currentTool = 'pen';
+        let currentColor = document.getElementById('colorPicker').value;
+        let lastX = 0;
+        let lastY = 0;
+        let lineWidth = 3;
+
+        // Resize canvas to fill container responsively
+        function resizeCanvas() {
+            const containerWidth = canvas.parentElement.clientWidth;
+            canvas.width = containerWidth * 0.95;
+            canvas.height = containerWidth * 0.75;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function startPosition(e) {
+            drawing = true;
+            [lastX, lastY] = getXY(e);
+        }
+
+        function finishedPosition() {
+            drawing = false;
+            ctx.beginPath();
+        }
+
+        function draw(e) {
+            if (!drawing) return;
+            const [x, y] = getXY(e);
+
+            ctx.lineWidth = lineWidth;
+            ctx.lineCap = 'round';
+
+            if (currentTool === 'eraser') {
+                ctx.strokeStyle = '#000';
+                ctx.globalCompositeOperation = 'destination-out'; // erase
+            } else {
+                ctx.strokeStyle = currentColor;
+                ctx.globalCompositeOperation = 'source-over'; // draw
+            }
+
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+
+            [lastX, lastY] = [x, y];
+        }
+
+        function getXY(e) {
+            let rect = canvas.getBoundingClientRect();
+            if (e.touches) {
+                return [
+                    e.touches[0].clientX - rect.left,
+                    e.touches[0].clientY - rect.top
+                ];
+            } else {
+                return [
+                    e.clientX - rect.left,
+                    e.clientY - rect.top
+                ];
+            }
+        }
+
+        // Event Listeners
+        canvas.addEventListener('mousedown', startPosition);
+        canvas.addEventListener('mouseup', finishedPosition);
+        canvas.addEventListener('mouseout', finishedPosition);
+        canvas.addEventListener('mousemove', draw);
+
+        // Touch support
+        canvas.addEventListener('touchstart', startPosition);
+        canvas.addEventListener('touchend', finishedPosition);
+        canvas.addEventListener('touchcancel', finishedPosition);
+        canvas.addEventListener('touchmove', draw);
+
+        // Toolbar Buttons
+        document.getElementById('colorPicker').addEventListener('change', e => {
+            currentColor = e.target.value;
+            currentTool = 'pen'; // switch to pen when picking color
+        });
+
+        document.getElementById('penBtn').addEventListener('click', () => {
+            currentTool = 'pen';
+            lineWidth = 3;
+        });
+
+        document.getElementById('eraserBtn').addEventListener('click', () => {
+            currentTool = 'eraser';
+            lineWidth = 10;
+        });
+
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
+
+        document.getElementById('saveBtn').addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'blackboard_drawing.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+
+        document.getElementById('exitBtn').addEventListener('click', () => {
+            window.location.href = '/';
+        });
+         
+       
+    </script>
+</body>
+
+</html>
