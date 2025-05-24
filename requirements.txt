@@ -33,7 +33,6 @@ django-widget-tweaks==1.4.8
 executing==2.0.1
 fastjsonschema==2.21.1
 filelock==3.17.0
--e git+https://github.com/Mohit2004Gothwal/drawingboard.git@3840917c32645a795ea63b71259c1defa0da7a56#egg=flashmind&subdirectory=desktop\ai_flashmind_2025
 Flask==2.3.2
 Flask-SocketIO==5.5.1
 flatbuffers==25.2.10
